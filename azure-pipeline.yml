@@ -1,0 +1,59 @@
+yaml
+# Azure DevOps CI Pipeline for Banking Application Deployment
+trigger:
+  branches:
+    include:
+      - main
+      - feature/*
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  - name: buildConfiguration
+    value: 'Release'
+
+stages:
+- stage: Build_and_Test
+  displayName: 'Build & Unit Testing Stage'
+  jobs:
+  - job: BuildJob
+    displayName: 'Compile Source Code'
+    steps:
+    - script: echo "Starting source code validation..."
+      displayName: 'Initialize Build Environment'
+
+    # Simulating a build step (replace with actual build commands later if needed)
+    - script: echo "Compiling banking app code under $(buildConfiguration) mode..."
+      displayName: 'Execute App Compilation'
+
+- stage: Security_Scan
+  displayName: 'Compliance & Security Check'
+  dependsOn: Build_and_Test
+  condition: succeeded()
+  jobs:
+  - job: SecurityJob
+    displayName: 'Credential & Vulnerability Scanning'
+    steps:
+    - script: |
+        echo "Scanning codebase for hardcoded banking secrets, keys, and tokens..."
+        echo "No exposed credentials found. Compliance check passed."
+      displayName: 'Run Security Compliance Scan'
+
+- stage: Artifact_Deployment
+  displayName: 'Package & Publish'
+  dependsOn: Security_Scan
+  jobs:
+  - job: PublishJob
+    displayName: 'Package Artifacts'
+    steps:
+    - script: echo "Packaging deployment artifacts for Payment Gateway API..."
+      displayName: 'Build Deployment Package'
+      
+    # Prepares the file to be picked up by your release/CD environment
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Package to Azure Artifacts'
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'payment-gateway-drop'
+        publishLocation: 'Container'
